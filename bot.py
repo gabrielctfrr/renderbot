@@ -18,6 +18,19 @@ faturas = [
     {"nome": "Nubank", "vencimento": 7, "limite": 200, "gasto": 0}
 ]
 
+limites = {
+    "itau": 1300,
+    "inter": 250,
+    "nu": 200
+}
+
+gastos = {
+    "itau": 150,
+    "inter": 0,
+    "nu": 0
+}
+
+
 # Definir os salários
 salarios = [1400, 560, 840]  # valores fixos que você mencionou
 saldo_conta = sum(salarios)  # Calcula o saldo total da conta
@@ -86,6 +99,22 @@ async def faturas_comando(update: Update, context: ContextTypes.DEFAULT_TYPE):
         resposta += f"{fatura['nome']} - Vencimento: {fatura['vencimento']} - Gasto: R${gasto:.2f} - Limite restante: R${limite_restante:.2f}\n"
     await update.message.reply_text(resposta)
 
+async def pagar(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        nome_cartao = context.args[0].lower()
+        valor_pago = float(context.args[1])
+
+        if nome_cartao in gastos:
+            gastos[nome_cartao] -= valor_pago
+            if gastos[nome_cartao] < 0:
+                gastos[nome_cartao] = 0
+            await update.message.reply_text(f"Pagamento registrado: R${valor_pago:.2f} no cartão {nome_cartao.title()}.")
+        else:
+            await update.message.reply_text("Cartão não encontrado.")
+    except:
+        await update.message.reply_text("Uso correto: /pagar [cartao] [valor]")
+
+
 # Função para calcular o resumo
 async def resumo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Mostrar o saldo da conta
@@ -113,6 +142,7 @@ def main():
     app.add_handler(CommandHandler("faturas", faturas_comando))
     app.add_handler(CommandHandler("resumo", resumo))
     app.add_handler(CommandHandler("receber", receber))
+    app.add_handler(CommandHandler("pagar", pagar))
 
     print("Bot rodando...")
     app.run_polling()
